@@ -1,0 +1,26 @@
+# ZweiOS Build Artifacts
+build/
+*.o
+*.elf
+*.iso
+*.bin
+*.log
+
+# Subagent Scratch & Survey Directories
+.agents/
+
+# Python Cache & Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary Test Logs
+serial.log
+test_results.json
+
+# OS and Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
