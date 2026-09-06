@@ -4,13 +4,13 @@
 namespace drivers {
 
 void serial_init() {
-    arch::outb(COM1_PORT + 1, 0x00);    // Disable all UART interrupts
-    arch::outb(COM1_PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
-    arch::outb(COM1_PORT + 0, 0x01);    // Set divisor to 1 (115200 baud low byte)
-    arch::outb(COM1_PORT + 1, 0x00);    //                       (high byte)
-    arch::outb(COM1_PORT + 3, 0x03);    // 8 bits, no parity, one stop bit (8N1)
-    arch::outb(COM1_PORT + 2, 0xC7);    // Enable FIFO, clear TX/RX, 14-byte threshold
-    arch::outb(COM1_PORT + 4, 0x0B);    // Enable IRQs, set RTS/DSR
+    arch::outb(COM1_PORT + 1, 0x00);
+    arch::outb(COM1_PORT + 3, 0x80);
+    arch::outb(COM1_PORT + 0, 0x01);
+    arch::outb(COM1_PORT + 1, 0x00);
+    arch::outb(COM1_PORT + 3, 0x03);
+    arch::outb(COM1_PORT + 2, 0xC7);
+    arch::outb(COM1_PORT + 4, 0x0B);
 
     serial_puts("[COM1] 16550 UART initialized (Port: 0x3F8, Baud: 115200, 8N1)\r\n");
 }
@@ -77,4 +77,4 @@ bool serial_try_getc(char* out) {
     return false;
 }
 
-} // namespace drivers
+}

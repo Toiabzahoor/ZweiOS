@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: VGA Text Mode (80x25) & Hardware Cursor Driver
- * ============================================================================== */
+
 
 #pragma once
 
@@ -10,7 +7,7 @@
 
 namespace drivers {
 
-// CGA Color Constants
+
 enum vga_color : uint8_t {
     VGA_COLOR_BLACK         = 0,
     VGA_COLOR_BLUE          = 1,
@@ -43,8 +40,9 @@ void vga_set_cursor(size_t x, size_t y);
 void vga_get_cursor(size_t* x, size_t* y);
 void vga_enable_cursor(uint8_t cursor_start = 14, uint8_t cursor_end = 15);
 void vga_disable_cursor();
+void vga_restore_text_mode();
 
-} // namespace drivers
+}
 
 using drivers::vga_init;
 using drivers::vga_clear;
@@ -53,3 +51,4 @@ using drivers::vga_puts;
 using drivers::vga_set_color;
 using drivers::vga_set_cursor;
 using drivers::vga_get_cursor;
+using drivers::vga_restore_text_mode;

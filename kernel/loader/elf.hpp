@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: 64-bit ELF (Executable and Linkable Format) Parser
- * ============================================================================== */
+
 
 #pragma once
 
@@ -12,7 +9,7 @@
 
 namespace loader {
 
-// ELF Header Identifiers
+
 inline constexpr uint8_t ELFMAG0 = 0x7F;
 inline constexpr uint8_t ELFMAG1 = 'E';
 inline constexpr uint8_t ELFMAG2 = 'L';
@@ -25,19 +22,19 @@ inline constexpr size_t EI_VERSION = 6;
 inline constexpr size_t EI_OSABI   = 7;
 
 inline constexpr uint8_t ELFCLASS64  = 2;
-inline constexpr uint8_t ELFDATA2LSB = 1; // 2's complement, little endian
+inline constexpr uint8_t ELFDATA2LSB = 1;
 inline constexpr uint8_t EV_CURRENT  = 1;
 
-// ELF Object File Types
+
 inline constexpr uint16_t ET_NONE = 0;
 inline constexpr uint16_t ET_REL  = 1;
 inline constexpr uint16_t ET_EXEC = 2;
-inline constexpr uint16_t ET_DYN  = 3; // Shared object / PIE executable
+inline constexpr uint16_t ET_DYN  = 3;
 
-// ELF Architecture
-inline constexpr uint16_t EM_X86_64 = 62; // AMD x86-64 architecture
 
-// Segment Types
+inline constexpr uint16_t EM_X86_64 = 62;
+
+
 inline constexpr uint32_t PT_NULL    = 0;
 inline constexpr uint32_t PT_LOAD    = 1;
 inline constexpr uint32_t PT_DYNAMIC = 2;
@@ -47,10 +44,10 @@ inline constexpr uint32_t PT_SHLIB   = 5;
 inline constexpr uint32_t PT_PHDR    = 6;
 inline constexpr uint32_t PT_TLS     = 7;
 
-// Segment Flags
-inline constexpr uint32_t PF_X = 1; // Execute
-inline constexpr uint32_t PF_W = 2; // Write
-inline constexpr uint32_t PF_R = 4; // Read
+
+inline constexpr uint32_t PF_X = 1;
+inline constexpr uint32_t PF_W = 2;
+inline constexpr uint32_t PF_R = 4;
 
 struct Elf64_Ehdr {
     uint8_t  e_ident[EI_NIDENT];
@@ -83,4 +80,4 @@ struct Elf64_Phdr {
 bool elf_probe(const uint8_t* data, size_t size);
 bool elf_parse(const uint8_t* data, size_t size, BinaryInfo* out_info);
 
-} // namespace loader
+}

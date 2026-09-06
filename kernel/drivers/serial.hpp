@@ -15,9 +15,9 @@ void serial_put_hex64(uint64_t val);
 void serial_put_dec(uint64_t val);
 bool serial_try_getc(char* out);
 
-} // namespace drivers
+}
 
-// Global aliases for kernel-wide convenience
+
 using drivers::serial_init;
 using drivers::serial_putc;
 using drivers::serial_puts;

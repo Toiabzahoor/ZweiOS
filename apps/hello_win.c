@@ -1,12 +1,8 @@
-/* ==============================================================================
- * ZweiOS Authentic Windows Executable Test Application
- * Target: x86_64-w64-mingw32 / Windows x64 PE32+
- * Dynamic Linking: Imports Win32 APIs from KERNEL32.DLL
- * ============================================================================== */
+
 
 #define STD_OUTPUT_HANDLE ((unsigned long)-11)
 
-// Win32 API Dynamic Declarations (Import Address Table binds these)
+
 __declspec(dllimport) void* __stdcall GetStdHandle(unsigned long nStdHandle);
 __declspec(dllimport) int   __stdcall WriteFile(
     void*         hFile,
@@ -17,7 +13,7 @@ __declspec(dllimport) int   __stdcall WriteFile(
 );
 __declspec(dllimport) void  __stdcall ExitProcess(unsigned int uExitCode);
 
-// Helper to write string to console via WriteFile
+
 static void win32_print(void* hOut, const char* str) {
     if (!str || !hOut) return;
     unsigned long len = 0;
@@ -28,7 +24,7 @@ static void win32_print(void* hOut, const char* str) {
     WriteFile(hOut, str, len, &written, (void*)0);
 }
 
-// Minimal integer to string formatter without libc
+
 static void win32_print_num(void* hOut, unsigned long val) {
     if (val == 0) {
         win32_print(hOut, "0");
@@ -44,7 +40,7 @@ static void win32_print_num(void* hOut, unsigned long val) {
     win32_print(hOut, &buf[idx + 1]);
 }
 
-// Windows PE Entry Point
+
 void mainCRTStartup(void) {
     void* hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -56,7 +52,7 @@ void mainCRTStartup(void) {
     win32_print(hOut, "[WIN32 PE] Environment    : TEB (GS:[0x30]) and PEB (GS:[0x60]) Validated\r\n");
     win32_print(hOut, "[WIN32 PE] ================================================================\r\n");
 
-    // Perform computation to verify ALU register state & Microsoft x64 stack frame
+
     win32_print(hOut, "[WIN32 PE] Computing Fibonacci sequence: ");
     unsigned long a = 0;
     unsigned long b = 1;
@@ -73,6 +69,6 @@ void mainCRTStartup(void) {
 
     win32_print(hOut, "[WIN32 PE] Computation complete. Exiting cleanly with status 100 via ExitProcess...\r\n");
 
-    // Terminate via KERNEL32!ExitProcess
+
     ExitProcess(100);
 }

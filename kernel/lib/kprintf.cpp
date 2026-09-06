@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Formatted Kernel Printf Implementation
- * ============================================================================== */
+
 
 #include "lib/kprintf.hpp"
 #include "drivers/vga.hpp"
@@ -9,9 +6,19 @@
 
 namespace lib {
 
+static void (*g_kprint_hook)(char c) = nullptr;
+
+void kprint_set_hook(void (*hook)(char c)) {
+    g_kprint_hook = hook;
+}
+
 void kprint_char(char c) {
     drivers::serial_putc(c);
-    drivers::vga_putc(c);
+    if (g_kprint_hook) {
+        g_kprint_hook(c);
+    } else {
+        drivers::vga_putc(c);
+    }
 }
 
 void kprint_str(const char* str) {
@@ -82,10 +89,10 @@ void kvprintf(const char* fmt, va_list args) {
             continue;
         }
 
-        i++; // Skip '%'
+        i++;
         if (fmt[i] == '\0') break;
 
-        // Flags & width
+
         int width = 0;
         if (fmt[i] >= '0' && fmt[i] <= '9') {
             width = fmt[i] - '0';
@@ -145,4 +152,4 @@ void kprintf(const char* fmt, ...) {
     va_end(args);
 }
 
-} // namespace lib
+}

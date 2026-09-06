@@ -39,7 +39,7 @@ void dump_stack_trace(uint64_t max_frames) {
     }
 }
 
-[[noreturn]] void panic(const char* message, const char* /*file*/, int /*line*/, const cpu_registers_t* regs) {
+[[noreturn]] void panic(const char* message, const char* , int , const cpu_registers_t* regs) {
     asm volatile ("cli");
 
     if (regs) {
@@ -50,7 +50,7 @@ void dump_stack_trace(uint64_t max_frames) {
             reinterpret_cast<uint8_t*>(&synth_regs)[i] = 0;
         }
 
-        synth_regs.vector_number = 3; // #BP Breakpoint / Panic
+        synth_regs.vector_number = 3;
         synth_regs.rip = reinterpret_cast<uint64_t>(__builtin_return_address(0));
         synth_regs.rbp = reinterpret_cast<uint64_t>(__builtin_frame_address(0));
         synth_regs.cs = 0x08;
@@ -72,4 +72,4 @@ void dump_stack_trace(uint64_t max_frames) {
     panic(message, file, line, regs);
 }
 
-} // namespace kernel
+}

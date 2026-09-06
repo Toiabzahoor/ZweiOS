@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: PS/2 8042 Keyboard Controller Implementation
- * ============================================================================== */
+
 
 #include "drivers/keyboard.hpp"
 #include "arch/x86_64/io.hpp"
@@ -11,7 +8,7 @@
 
 namespace drivers {
 
-// Ring Buffer Implementation
+
 static char ring_buffer[KEYBOARD_BUFFER_SIZE];
 static volatile size_t ring_head = 0;
 static volatile size_t ring_tail = 0;
@@ -25,14 +22,14 @@ static void ring_push(char c) {
 }
 
 
-// Modifier state tracking
+
 static bool shift_pressed = false;
 static bool ctrl_pressed  = false;
 static bool alt_pressed   = false;
 static bool caps_locked   = false;
 static bool extended_e0   = false;
 
-// Scan Code Set 1 Table (Unshifted)
+
 static const char scancode_set1_normal[128] = {
     0,   27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
     '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
@@ -44,7 +41,7 @@ static const char scancode_set1_normal[128] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0
 };
 
-// Scan Code Set 1 Table (Shifted)
+
 static const char scancode_set1_shifted[128] = {
     0,   27, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
     '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
@@ -83,64 +80,64 @@ static bool ring_pop(char* out) {
 }
 
 static void process_scancode(uint8_t scancode) {
-    // Check for E0 Extended Scancode prefix
+
     if (scancode == 0xE0) {
         extended_e0 = true;
         return;
     }
 
-    // Extended Scancodes (0xE0 followed by keycode)
+
     if (extended_e0) {
         extended_e0 = false;
-        // Ignore extended non-ASCII keys (arrows, nav keys, etc.) without corrupting state
+
         return;
     }
 
-    // Check Key Release (Break Code: Bit 7 set)
+
     if (scancode & 0x80) {
         uint8_t released = scancode & 0x7F;
-        if (released == 0x2A || released == 0x36) { // Left or Right Shift
+        if (released == 0x2A || released == 0x36) {
             shift_pressed = false;
-        } else if (released == 0x1D) { // Ctrl
+        } else if (released == 0x1D) {
             ctrl_pressed = false;
-        } else if (released == 0x38) { // Alt
+        } else if (released == 0x38) {
             alt_pressed = false;
         }
         return;
     }
 
-    // Key Press (Make Code)
-    if (scancode == 0x2A || scancode == 0x36) { // Shift
+
+    if (scancode == 0x2A || scancode == 0x36) {
         shift_pressed = true;
         return;
     }
 
-    if (scancode == 0x1D) { // Ctrl
+    if (scancode == 0x1D) {
         ctrl_pressed = true;
         return;
     }
 
-    if (scancode == 0x38) { // Alt
+    if (scancode == 0x38) {
         alt_pressed = true;
         return;
     }
 
-    if (scancode == 0x3A) { // CapsLock
+    if (scancode == 0x3A) {
         caps_locked = !caps_locked;
         return;
     }
 
-    // Handle Ctrl combinations (Ctrl+C = 0x03, Ctrl+L = 0x0C)
+
     if (ctrl_pressed) {
-        if (scancode == 0x2E) { // 'c' / 'C' -> Ctrl+C (0x03)
+        if (scancode == 0x2E) {
             ring_push('\x03');
-        } else if (scancode == 0x26) { // 'l' / 'L' -> Ctrl+L (0x0C)
+        } else if (scancode == 0x26) {
             ring_push('\x0c');
         }
         return;
     }
 
-    // Translate ASCII
+
     char ascii = 0;
     bool use_upper = (shift_pressed ^ caps_locked);
 
@@ -159,14 +156,14 @@ static void process_scancode(uint8_t scancode) {
 }
 
 void keyboard_poll() {
-    while (arch::inb(0x64) & 0x01) {
+    while ((arch::inb(0x64) & 0x21) == 0x01) {
         uint8_t scancode = arch::inb(0x60);
         process_scancode(scancode);
     }
 }
 
-void keyboard_irq_handler(arch::cpu_registers_t* /*regs*/) {
-    while (arch::inb(0x64) & 0x01) {
+void keyboard_irq_handler(arch::cpu_registers_t* ) {
+    while ((arch::inb(0x64) & 0x21) == 0x01) {
         uint8_t scancode = arch::inb(0x60);
         process_scancode(scancode);
     }
@@ -193,37 +190,37 @@ bool keyboard_try_getchar(char* out) {
 }
 
 bool sys_try_getc(char* out) {
-    // 1. Pull from keyboard ring buffer (filled by IRQ1)
+
     if (ring_pop(out)) {
         return true;
     }
-    // 2. Only poll 8042 directly if interrupts are disabled
+
     if (!interrupts_enabled()) {
         keyboard_poll();
         if (ring_pop(out)) {
             return true;
         }
     }
-    // 3. Fall back to serial COM1 RX
+
     return serial_try_getc(out);
 }
 
 void keyboard_init() {
-    // Flush any pending data in 8042 output buffer
+
     while (arch::inb(0x64) & 0x01) {
         arch::inb(0x60);
     }
 
-    // Enable first PS/2 port
+
     arch::outb(0x64, 0xAE);
 
-    // Register IRQ1 handler on vector 33
+
     arch::isr_register_handler(33, keyboard_irq_handler);
 
-    // Unmask IRQ1 on Master PIC
+
     arch::pic_clear_mask(1);
 
     drivers::serial_puts("[PS/2] 8042 Keyboard Controller initialized; Ring buffer ready\r\n");
 }
 
-} // namespace drivers
+}

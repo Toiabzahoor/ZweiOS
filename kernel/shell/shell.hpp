@@ -1,8 +1,3 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Interactive Kernel Shell & Line Editor Header
- * ============================================================================== */
-
 #pragma once
 
 #include <stdint.h>
@@ -12,7 +7,7 @@ namespace shell {
 
 inline constexpr size_t MAX_LINE_LEN = 256;
 inline constexpr size_t MAX_ARGS     = 16;
-inline constexpr size_t MAX_COMMANDS = 48;
+inline constexpr size_t MAX_COMMANDS = 64;
 
 typedef int (*command_fn)(int argc, char* argv[]);
 
@@ -28,7 +23,6 @@ void shell_dispatch(char* line);
 void shell_feed_char(char c);
 void shell_run();
 
-// Built-in command handlers
 int cmd_help(int argc, char* argv[]);
 int cmd_version(int argc, char* argv[]);
 int cmd_about(int argc, char* argv[]);
@@ -51,8 +45,20 @@ int cmd_mkdir(int argc, char* argv[]);
 int cmd_rm(int argc, char* argv[]);
 int cmd_write(int argc, char* argv[]);
 int cmd_disks(int argc, char* argv[]);
+int cmd_mount(int argc, char* argv[]);
+int cmd_unmount(int argc, char* argv[]);
+int cmd_gui(int argc, char* argv[]);
+int cmd_resolution(int argc, char* argv[]);
+int cmd_ps(int argc, char* argv[]);
+int cmd_kill(int argc, char* argv[]);
+int cmd_spawn(int argc, char* argv[]);
+int cmd_ifconfig(int argc, char* argv[]);
+int cmd_ping(int argc, char* argv[]);
+int cmd_nslookup(int argc, char* argv[]);
+int cmd_netstat(int argc, char* argv[]);
+int cmd_curl(int argc, char* argv[]);
 
-} // namespace shell
+}
 
 using shell::shell_init;
 using shell::shell_register_command;

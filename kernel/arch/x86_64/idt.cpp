@@ -1,14 +1,10 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Architecture: x86_64 Long Mode
- * Component: Interrupt Descriptor Table (IDT) Implementation
- * ============================================================================== */
+
 
 #include "arch/x86_64/idt.hpp"
 #include "arch/x86_64/gdt.hpp"
 #include "drivers/serial.hpp"
 
-// Declare external assembly ISR stub entry points
+
 extern "C" {
     void isr_stub_0();
     void isr_stub_1();
@@ -132,30 +128,30 @@ void idt_set_gate(uint8_t vector, void* isr_stub_addr, uint16_t selector, uint8_
 }
 
 void idt_init() {
-    // 1. Zero out entire 256-entry table
+
     uint8_t* raw = reinterpret_cast<uint8_t*>(idt_table);
     for (size_t i = 0; i < sizeof(idt_table); ++i) {
         raw[i] = 0;
     }
 
-    // 2. Install all 48 default exception and IRQ stubs (0..47)
+
     for (uint8_t vec = 0; vec < 48; ++vec) {
-        // Vector 8 (#DF Double Fault) uses dedicated emergency stack IST1
+
         uint8_t ist_val = (vec == 8) ? 1 : 0;
         idt_set_gate(vec, isr_stub_table[vec], KERNEL_CS, IDT_ATTR_INTERRUPT_GATE, ist_val);
     }
 
-    // 3. Vector 128 (0x80 Syscall trap gate - DPL 3)
+
     idt_set_gate(128, reinterpret_cast<void*>(isr_stub_128), KERNEL_CS, IDT_ATTR_USER_GATE, 0);
 
-    // 4. Vector 255 (Spurious interrupt)
+
     idt_set_gate(255, reinterpret_cast<void*>(isr_stub_255), KERNEL_CS, IDT_ATTR_INTERRUPT_GATE, 0);
 
-    // 5. Populate IDTR structure
+
     idtr.limit = static_cast<uint16_t>(sizeof(idt_table) - 1);
     idtr.base  = reinterpret_cast<uint64_t>(idt_table);
 
-    // 6. Load IDTR register
+
     idt_load(&idtr);
 
     drivers::serial_puts("[IDT] 256-entry IDT loaded; Exception ISRs registered\r\n");
@@ -165,4 +161,4 @@ const idtr_t& idt_get_idtr() {
     return idtr;
 }
 
-} // namespace arch
+}

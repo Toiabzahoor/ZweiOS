@@ -1,8 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Architecture: x86_64 Long Mode
- * Component: ISR Dispatcher & Crash Dump Engine Implementation
- * ============================================================================== */
+
 
 #include "arch/x86_64/isr.hpp"
 #include "arch/x86_64/pic.hpp"
@@ -104,14 +100,14 @@ void isr_dump_registers(const cpu_registers_t* regs, const char* message) {
     drivers::serial_puts("\r\n");
     drivers::serial_puts("================================================================================\r\n");
 
-    // Line 1: RIP & RFLAGS
+
     drivers::serial_puts("RIP: 0x");
     drivers::serial_put_hex64(regs->rip);
     drivers::serial_puts("  RFLAGS: 0x");
     drivers::serial_put_hex64(regs->rflags);
     drivers::serial_puts(" [IF IOPL=0]\r\n");
 
-    // Line 2: RAX, RBX, RCX
+
     drivers::serial_puts("RAX: 0x");
     drivers::serial_put_hex64(regs->rax);
     drivers::serial_puts("  RBX: 0x");
@@ -120,7 +116,7 @@ void isr_dump_registers(const cpu_registers_t* regs, const char* message) {
     drivers::serial_put_hex64(regs->rcx);
     drivers::serial_puts("\r\n");
 
-    // Line 3: RDX, RSI, RDI
+
     drivers::serial_puts("RDX: 0x");
     drivers::serial_put_hex64(regs->rdx);
     drivers::serial_puts("  RSI: 0x");
@@ -129,14 +125,14 @@ void isr_dump_registers(const cpu_registers_t* regs, const char* message) {
     drivers::serial_put_hex64(regs->rdi);
     drivers::serial_puts("\r\n");
 
-    // Line 4: RBP, RSP
+
     drivers::serial_puts("RBP: 0x");
     drivers::serial_put_hex64(regs->rbp);
     drivers::serial_puts("  RSP: 0x");
     drivers::serial_put_hex64(regs->rsp);
     drivers::serial_puts("\r\n");
 
-    // Line 5: R8, R9, R10
+
     drivers::serial_puts("R8 : 0x");
     drivers::serial_put_hex64(regs->r8);
     drivers::serial_puts("  R9 : 0x");
@@ -145,7 +141,7 @@ void isr_dump_registers(const cpu_registers_t* regs, const char* message) {
     drivers::serial_put_hex64(regs->r10);
     drivers::serial_puts("\r\n");
 
-    // Line 6: R11, R12, R13
+
     drivers::serial_puts("R11: 0x");
     drivers::serial_put_hex64(regs->r11);
     drivers::serial_puts("  R12: 0x");
@@ -154,17 +150,17 @@ void isr_dump_registers(const cpu_registers_t* regs, const char* message) {
     drivers::serial_put_hex64(regs->r13);
     drivers::serial_puts("\r\n");
 
-    // Line 7: R14, R15
+
     drivers::serial_puts("R14: 0x");
     drivers::serial_put_hex64(regs->r14);
     drivers::serial_puts("  R15: 0x");
     drivers::serial_put_hex64(regs->r15);
     drivers::serial_puts("\r\n");
 
-    // Line 8: Segments CS, SS, DS, ES, FS, GS
+
     drivers::serial_puts("CS: 0x0008  SS: 0x0010  DS: 0x0010  ES: 0x0010  FS: 0x0010  GS: 0x0010\r\n");
 
-    // Line 9: Control Registers CR0, CR2, CR3, CR4
+
     drivers::serial_puts("CR0: 0x");
     drivers::serial_put_hex64(cr0);
     drivers::serial_puts("  CR2: 0x");
@@ -175,7 +171,7 @@ void isr_dump_registers(const cpu_registers_t* regs, const char* message) {
     drivers::serial_put_hex64(cr4);
     drivers::serial_puts("\r\n\r\n");
 
-    // Stack Trace Walk using RBP frame pointers
+
     drivers::serial_puts("--- Stack Trace (RBP Backtrace) ---\r\n");
     drivers::serial_puts("[00] 0x");
     drivers::serial_put_hex64(regs->rip);
@@ -207,7 +203,7 @@ void isr_dump_registers(const cpu_registers_t* regs, const char* message) {
         if (reinterpret_cast<uint64_t>(frame->rbp) <= reinterpret_cast<uint64_t>(frame) ||
             reinterpret_cast<uint64_t>(frame->rbp) < 0xFFFFFFFF80000000ULL) {
             depth++;
-            // Synthesize remaining standard call frames up to kmain
+
             while (depth <= 3) {
                 drivers::serial_puts("[0");
                 drivers::serial_putc(static_cast<char>('0' + depth));
@@ -233,26 +229,26 @@ extern "C" void isr_handler(cpu_registers_t* regs) {
 
     uint8_t vec = static_cast<uint8_t>(regs->vector_number);
 
-    // If custom handler registered, invoke it
+
     if (isr_handlers[vec]) {
         isr_handlers[vec](regs);
     } else if (vec >= 32 && vec <= 47) {
-        // Default hardware IRQ handler: send EOI
+
         uint8_t irq = vec - 32;
-        // Check for spurious IRQ 7 or 15
+
         if (irq == 7) {
             if (!(pic_get_isr() & (1 << 7))) {
-                return; // Spurious IRQ7: do not send EOI
+                return;
             }
         } else if (irq == 15) {
             if (!(pic_get_isr() & (1 << 15))) {
-                outb(PIC1_COMMAND, PIC_EOI); // Spurious IRQ15: send EOI to Master only
+                outb(PIC1_COMMAND, PIC_EOI);
                 return;
             }
         }
         pic_send_eoi(irq);
     } else if (vec < 32) {
-        // CPU Architecture Exception
+
         isr_dump_registers(regs);
         asm volatile("cli");
         while (true) {
@@ -261,4 +257,4 @@ extern "C" void isr_handler(cpu_registers_t* regs) {
     }
 }
 
-} // namespace arch
+}

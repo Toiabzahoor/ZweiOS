@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Windows 64-bit PE32+ (Portable Executable) Implementation
- * ============================================================================== */
+
 
 #include "loader/pe.hpp"
 #include "win32/win32.hpp"
@@ -202,5 +199,5 @@ bool pe_resolve_imports(uint64_t image_base, const BinaryInfo* info) {
     return true;
 }
 
-} // namespace loader
+}
 

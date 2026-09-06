@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Universal Dual Binary Loader (ELF64 & PE32+) Implementation
- * ============================================================================== */
+
 
 #include "loader/loader.hpp"
 #include "loader/stack.hpp"
@@ -13,6 +10,7 @@
 #include "mm/heap.hpp"
 #include "win32/win32.hpp"
 #include "fs/vfs.hpp"
+#include "proc/process.hpp"
 
 namespace loader {
 
@@ -142,24 +140,24 @@ void loader_print_info(const BinaryInfo* info) {
     lib::kprint_str("================================================================\r\n");
 }
 
-// -----------------------------------------------------------------------------
-// Built-in Minimal Sample Binaries for Runtime Demonstration & Test Verification
-// -----------------------------------------------------------------------------
 
-// Sample Linux ELF64 Executable (352 bytes):
-// Code segment entry at 0x401000 executes 'mov eax, 42; ret' (0xB8 0x2A 0x00 0x00 0x00 0xC3)
-// Real 64-bit Static Linux ELF Executable (5752 bytes):
-// Compiled from C using clang -target x86_64-unknown-linux-gnu -nostdlib -static
-// Executes in Ring 3 User Mode, validates System V stack (argc, argv[0]),
-// issues sys_write via syscall instruction, and exits with status 42 via sys_exit.
-// Real 64-bit Static Linux ELF Executable:
-// Compiled from apps/hello_linux.c with clang -target x86_64-unknown-linux-gnu
-// Real 64-bit Static Linux ELF Executable:
-// Compiled from apps/hello_linux.c with clang -target x86_64-unknown-linux-gnu
-// Real 64-bit Static Linux ELF Executable:
-// Compiled from apps/hello_linux.c with clang -target x86_64-unknown-linux-gnu
-// Real 64-bit Static Linux ELF Executable:
-// Compiled from apps/hello_linux.c with clang -target x86_64-unknown-linux-gnu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 alignas(16) static const uint8_t sample_elf_binary[] = {
     0x7F, 0x45, 0x4C, 0x46, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x02, 0x00, 0x3E, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x10, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -572,9 +570,9 @@ alignas(16) static const uint8_t sample_elf_binary[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-// Real 64-bit Windows PE32+ Executable:
-// Real 64-bit Windows PE32+ Executable:
-// Compiled from apps/hello_win.c with clang -target x86_64-windows-gnu
+
+
+
 alignas(16) static const uint8_t sample_pe_binary[] = {
     0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00,
     0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1079,9 +1077,9 @@ const uint8_t* loader_get_sample_pe(size_t* out_size) {
     return sample_pe_binary;
 }
 
-// -----------------------------------------------------------------------------
-// Memory Mapping & CPU Dispatch Execution Engine
-// -----------------------------------------------------------------------------
+
+
+
 
 bool loader_load(const uint8_t* data, size_t size, const BinaryInfo* info) {
     if (!data || !info) {
@@ -1097,7 +1095,7 @@ bool loader_load(const uint8_t* data, size_t size, const BinaryInfo* info) {
 
         uint8_t* dest = reinterpret_cast<uint8_t*>(seg->vaddr);
 
-        // Ensure virtual pages are mapped via VMM
+
         uint64_t start_page = seg->vaddr & ~0xFFFULL;
         uint64_t end_page = (seg->vaddr + seg->mem_size + 0xFFFULL) & ~0xFFFULL;
         for (uint64_t v = start_page; v < end_page; v += mm::PAGE_SIZE) {
@@ -1109,18 +1107,18 @@ bool loader_load(const uint8_t* data, size_t size, const BinaryInfo* info) {
             mm::vmm_map_page(v, p, flags);
         }
 
-        // Copy segment file content to mapped virtual address
+
         if (seg->file_size > 0) {
             lib::memcpy(dest, data + seg->file_offset, seg->file_size);
         }
 
-        // Zero out uninitialized BSS memory
+
         if (seg->mem_size > seg->file_size) {
             lib::memset(dest + seg->file_size, 0, seg->mem_size - seg->file_size);
         }
     }
 
-    // Resolve PE32+ dynamic imports (IAT binding)
+
     if (info->format == BinaryFormat::PE32_PLUS) {
         if (!pe_resolve_imports(info->image_base, info)) {
             lib::kprint_str("[LOADER] Warning: Failed to bind some PE32+ imports.\r\n");
@@ -1132,13 +1130,23 @@ bool loader_load(const uint8_t* data, size_t size, const BinaryInfo* info) {
 
 alignas(16) static uint8_t execution_stack[16384];
 
-int64_t loader_execute(const BinaryInfo* info) {
+int64_t loader_execute(const BinaryInfo* info, int argc, const char* const argv[]) {
     if (!info || info->entry_point == 0) {
         return -1;
     }
 
+    const char* default_argv[] = { "/bin/hello_linux", nullptr };
+    const char* const* active_argv = (argv && argc > 0) ? argv : default_argv;
+    int active_argc = (argv && argc > 0) ? argc : 1;
+
     if (info->format == BinaryFormat::ELF64) {
-        // 1. Configure initial program break (brk) past highest loaded segment
+
+        proc::PCB* pcb = proc::process_create(active_argv[0], info->entry_point, proc::ProcessType::LINUX_ELF64, true);
+        if (pcb) {
+            proc::process_set_current(pcb);
+        }
+
+
         uint64_t max_seg_end = 0x500000ULL;
         for (size_t i = 0; i < info->segment_count; ++i) {
             uint64_t seg_end = info->segments[i].vaddr + info->segments[i].mem_size;
@@ -1149,7 +1157,7 @@ int64_t loader_execute(const BinaryInfo* info) {
         uint64_t initial_brk = (max_seg_end + 0xFFFULL) & ~0xFFFULL;
         syscall::set_process_brk(initial_brk);
 
-        // 2. Setup 64KB System V initial user stack at 0x510000..0x520000
+
         uint64_t user_stack_bottom = 0x510000ULL;
         size_t user_stack_size = 65536;
         for (uint64_t v = user_stack_bottom; v < user_stack_bottom + user_stack_size; v += mm::PAGE_SIZE) {
@@ -1157,32 +1165,60 @@ int64_t loader_execute(const BinaryInfo* info) {
             mm::vmm_map_page(v, p, mm::PTE_PRESENT | mm::PTE_WRITABLE | mm::PTE_USER);
         }
 
-        const char* argv[] = { "/bin/hello_linux", nullptr };
-        uint64_t user_rsp = setup_system_v_stack(user_stack_bottom, user_stack_size, info, 1, argv);
+        uint64_t user_rsp = setup_system_v_stack(user_stack_bottom, user_stack_size, info, active_argc, active_argv);
+        if (pcb) {
+            pcb->user_stack_base = user_stack_bottom;
+            pcb->user_stack_top = user_rsp;
+            pcb->state = proc::ProcessState::RUNNING;
+        }
 
-        lib::kprint_str("[LOADER] Preparing System V user stack at ");
-        lib::kprint_ptr(reinterpret_cast<const void*>(user_rsp));
-        lib::kprint_str("\r\n");
-        lib::kprint_str("[LOADER] Dropping privilege to Ring 3 (User Mode)...\r\n");
 
-        return syscall::enter_user_mode(info->entry_point, user_rsp);
+        int64_t res = syscall::enter_user_mode(info->entry_point, user_rsp);
+        if (pcb) {
+            pcb->state = proc::ProcessState::ZOMBIE;
+            pcb->exit_code = res;
+            proc::process_set_current(proc::process_get_by_pid(0));
+        }
+        return res;
     }
 
     if (info->format == BinaryFormat::PE32_PLUS) {
-        // Configure Windows Thread Environment Block (TEB) & Process Environment Block (PEB)
+
+        proc::PCB* pcb = proc::process_create(active_argv[0], info->entry_point, proc::ProcessType::WIN32_PE, false);
+        if (pcb) {
+            proc::process_set_current(pcb);
+            pcb->state = proc::ProcessState::RUNNING;
+        }
+
+
         uint64_t stack_bottom = reinterpret_cast<uint64_t>(execution_stack);
         uint64_t stack_top = (stack_bottom + sizeof(execution_stack)) & ~0xFULL;
 
         win32::win32_init_thread_environment(info->image_base, stack_top, stack_bottom);
 
+
+        char cmdline_buf[256];
+        cmdline_buf[0] = '\0';
+        for (int i = 0; i < active_argc; ++i) {
+            if (i > 0) lib::strcat(cmdline_buf, " ");
+            lib::strcat(cmdline_buf, active_argv[i]);
+        }
+        win32::win32_set_command_line(cmdline_buf);
+
         lib::kprint_str("[LOADER] Launching Windows PE32+ entry with Microsoft x64 ABI...\r\n");
-        return loader_invoke_entry(info->entry_point, stack_top, true);
+        int64_t res = loader_invoke_entry(info->entry_point, stack_top, true);
+        if (pcb) {
+            pcb->state = proc::ProcessState::ZOMBIE;
+            pcb->exit_code = res;
+            proc::process_set_current(proc::process_get_by_pid(0));
+        }
+        return res;
     }
 
     return -1;
 }
 
-int64_t loader_execute_path(const char* path) {
+int64_t loader_execute_path(const char* path, int argc, const char* const argv[]) {
     if (!path) return -1;
 
     fs::VNodeStat st;
@@ -1232,21 +1268,14 @@ int64_t loader_execute_path(const char* path) {
         return -1;
     }
 
-    lib::kprint_str("[LOADER] Successfully loaded '");
-    lib::kprint_str(path);
-    lib::kprint_str("' (");
-    lib::kprint_udec(static_cast<uint64_t>(bytes_read));
-    lib::kprint_str(" bytes). Target entry: ");
-    lib::kprint_ptr(reinterpret_cast<const void*>(info.entry_point));
-    lib::kprint_str("\r\n");
 
-    if (info.format == BinaryFormat::PE32_PLUS) {
-        win32::win32_set_command_line(path);
-    }
+    const char* default_argv[] = { path, nullptr };
+    const char* const* active_argv = (argv && argc > 0) ? argv : default_argv;
+    int active_argc = (argv && argc > 0) ? argc : 1;
 
-    int64_t code = loader_execute(&info);
+    int64_t code = loader_execute(&info, active_argc, active_argv);
     mm::kfree(data);
     return code;
 }
 
-} // namespace loader
+}

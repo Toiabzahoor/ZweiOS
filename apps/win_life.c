@@ -1,14 +1,4 @@
-/* ==============================================================================
- * ZweiOS Complex Windows Application: win_life.exe
- * Target: x86_64-w64-mingw32 / Windows x64 PE32+
- * Runs identically on: Native Microsoft Windows & ZweiOS In-Kernel Win32 Subsystem
- * Functionality:
- *   - Conway's Game of Life 2D Cellular Automaton Simulation
- *   - 40x15 Toroidal Lattice Grid
- *   - Glider, Blinker, and Beacon pattern evolution
- *   - Frame-by-frame ASCII graphics rendering
- *   - Population dynamics tracking
- * ============================================================================== */
+
 
 #define STD_OUTPUT_HANDLE ((unsigned long)-11)
 #define GRID_WIDTH  40
@@ -65,11 +55,11 @@ static int evolve(void) {
             unsigned char state = grid_curr[y][x];
 
             if (state == 1) {
-                // Rule 1 & 3: Death by underpopulation or overpopulation
-                // Rule 2: Survival with 2 or 3 neighbors
+
+
                 grid_next[y][x] = (neighbors == 2 || neighbors == 3) ? 1 : 0;
             } else {
-                // Rule 4: Reproduction with exactly 3 neighbors
+
                 grid_next[y][x] = (neighbors == 3) ? 1 : 0;
             }
 
@@ -79,7 +69,7 @@ static int evolve(void) {
         }
     }
 
-    // Copy back
+
     for (int y = 0; y < GRID_HEIGHT; ++y) {
         for (int x = 0; x < GRID_WIDTH; ++x) {
             grid_curr[y][x] = grid_next[y][x];
@@ -115,26 +105,26 @@ void mainCRTStartup(void) {
     print_str(hOut, "  [WIN32 LIFE] Conway's Game of Life Cellular Simulation        \r\n");
     print_str(hOut, "================================================================\r\n");
 
-    // Clear grid
+
     for (int y = 0; y < GRID_HEIGHT; ++y) {
         for (int x = 0; x < GRID_WIDTH; ++x) {
             grid_curr[y][x] = 0;
         }
     }
 
-    // Initialize Classic Glider at (1, 1)
+
     grid_curr[1][2] = 1;
     grid_curr[2][3] = 1;
     grid_curr[3][1] = 1;
     grid_curr[3][2] = 1;
     grid_curr[3][3] = 1;
 
-    // Initialize Blinker at (8, 5)
+
     grid_curr[8][5] = 1;
     grid_curr[8][6] = 1;
     grid_curr[8][7] = 1;
 
-    // Initialize Beacon at (5, 25)
+
     grid_curr[5][25] = 1;
     grid_curr[5][26] = 1;
     grid_curr[6][25] = 1;
@@ -144,14 +134,14 @@ void mainCRTStartup(void) {
 
     int initial_pop = 5 + 3 + 6;
 
-    // Initial Frame
+
     render_grid(hOut, 0, initial_pop);
 
-    // Evolve 10 Generations
+
     int final_pop = initial_pop;
     for (int gen = 1; gen <= 10; ++gen) {
         final_pop = evolve();
-        // Print generation 5 and 10 to keep console compact
+
         if (gen == 5 || gen == 10) {
             render_grid(hOut, gen, final_pop);
         }

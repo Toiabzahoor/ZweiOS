@@ -1,14 +1,4 @@
-/* ==============================================================================
- * ZweiOS Complex Windows Application: win_sysinfo.exe
- * Target: x86_64-w64-mingw32 / Windows x64 PE32+
- * Runs identically on: Native Microsoft Windows & ZweiOS In-Kernel Win32 Subsystem
- * Functionality:
- *   - Direct GS:[0x30] (TEB) and GS:[0x60] (PEB) runtime inspection
- *   - PEB ImageBaseAddress extraction
- *   - Dynamic Virtual Memory allocation (16 KB) and checksum verification
- *   - Win32 error code state machine auditing (SetLastError/GetLastError)
- *   - Command line and system uptime queries
- * ============================================================================== */
+
 
 #define STD_OUTPUT_HANDLE ((unsigned long)-11)
 #define MEM_COMMIT        0x00001000
@@ -16,7 +6,7 @@
 #define MEM_RELEASE       0x00008000
 #define PAGE_READWRITE    0x04
 
-// Win32 API Dynamic Declarations
+
 __declspec(dllimport) void*         __stdcall GetStdHandle(unsigned long nStdHandle);
 __declspec(dllimport) int           __stdcall WriteFile(void* hFile, const void* lpBuffer, unsigned long nNumberOfBytesToWrite, unsigned long* lpNumberOfBytesWritten, void* lpOverlapped);
 __declspec(dllimport) void          __stdcall ExitProcess(unsigned int uExitCode);
@@ -81,7 +71,7 @@ void mainCRTStartup(void) {
     print_str(hOut, "  [WIN32 SYSINFO] Windows x64 Runtime & TEB/PEB Forensic Audit  \r\n");
     print_str(hOut, "================================================================\r\n");
 
-    // 1. Thread Environment Block (TEB) & Process Environment Block (PEB) Inspection
+
     void* teb = read_teb();
     void* peb = read_peb();
 
@@ -93,7 +83,7 @@ void mainCRTStartup(void) {
     print_hex64(hOut, (unsigned long long)peb);
     print_str(hOut, "\r\n");
 
-    // In standard 64-bit PEB layout, ImageBaseAddress is at offset 0x10
+
     unsigned long long image_base = 0;
     if (peb) {
         image_base = *(unsigned long long*)((char*)peb + 0x10);
@@ -102,7 +92,7 @@ void mainCRTStartup(void) {
     print_hex64(hOut, image_base);
     print_str(hOut, "\r\n");
 
-    // 2. Dynamic Memory Management: VirtualAlloc & VirtualFree
+
     print_str(hOut, "[4] Allocating 16 KB virtual memory via VirtualAlloc...\r\n");
     unsigned long long alloc_size = 16384;
     unsigned char* page_mem = (unsigned char*)VirtualAlloc((void*)0, alloc_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -112,7 +102,7 @@ void mainCRTStartup(void) {
         print_hex64(hOut, (unsigned long long)page_mem);
         print_str(hOut, "\r\n");
 
-        // Write deterministic pseudorandom test pattern across all 4 pages
+
         unsigned long long checksum = 0;
         for (unsigned long long i = 0; i < alloc_size; ++i) {
             unsigned char b = (unsigned char)((i * 37 + 101) & 0xFF);
@@ -124,14 +114,14 @@ void mainCRTStartup(void) {
         print_hex64(hOut, checksum);
         print_str(hOut, "\r\n");
 
-        // Release pages
+
         VirtualFree(page_mem, alloc_size, MEM_RELEASE);
         print_str(hOut, "    Virtual memory successfully released via VirtualFree.\r\n");
     } else {
         print_str(hOut, "    Error: VirtualAlloc failed!\r\n");
     }
 
-    // 3. Error Code State Machine
+
     print_str(hOut, "[5] Testing Win32 Error Code Dispatch: SetLastError(0x1337)...\r\n");
     SetLastError(0x1337);
     unsigned long err = GetLastError();
@@ -139,7 +129,7 @@ void mainCRTStartup(void) {
     print_hex64(hOut, (unsigned long long)err);
     print_str(hOut, (err == 0x1337) ? " [MATCH OK]\r\n" : " [MISMATCH]\r\n");
 
-    // 4. Command Line & System Uptime
+
     const char* cmd_line = GetCommandLineA();
     print_str(hOut, "[6] GetCommandLineA() returned       : \"");
     print_str(hOut, cmd_line ? cmd_line : "(null)");

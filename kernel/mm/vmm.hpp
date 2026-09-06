@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Virtual Memory Manager (VMM 4-Level Paging & HHDM)
- * ============================================================================== */
+
 
 #pragma once
 
@@ -16,7 +13,7 @@ inline constexpr uint64_t HHDM_VIRT_BASE   = 0xFFFF800000000000ULL;
 inline constexpr uint64_t HEAP_VIRT_BASE   = 0xFFFFFFFF90000000ULL;
 inline constexpr uint64_t HEAP_VIRT_MAX    = 0xFFFFFFFFBFFFFFFFULL;
 
-// Page Table Entry (PTE) Flags
+
 inline constexpr uint64_t PTE_PRESENT   = (1ULL << 0);
 inline constexpr uint64_t PTE_WRITABLE  = (1ULL << 1);
 inline constexpr uint64_t PTE_USER      = (1ULL << 2);
@@ -39,7 +36,15 @@ bool vmm_unmap_page(uint64_t virt);
 uint64_t vmm_virt_to_phys(uint64_t virt);
 void vmm_flush_tlb(uint64_t virt);
 
-} // namespace mm
+
+uint64_t vmm_get_kernel_pml4();
+uint64_t vmm_create_user_pml4();
+void vmm_destroy_user_pml4(uint64_t pml4_phys);
+void vmm_switch_pml4(uint64_t pml4_phys);
+uint64_t vmm_get_current_pml4();
+bool vmm_map_user_page(uint64_t pml4_phys, uint64_t virt, uint64_t phys, uint64_t flags = (PTE_PRESENT | PTE_WRITABLE | PTE_USER));
+
+}
 
 using mm::KERNEL_VIRT_BASE;
 using mm::HHDM_VIRT_BASE;
@@ -55,3 +60,9 @@ using mm::vmm_map_page;
 using mm::vmm_unmap_page;
 using mm::vmm_virt_to_phys;
 using mm::vmm_flush_tlb;
+using mm::vmm_get_kernel_pml4;
+using mm::vmm_create_user_pml4;
+using mm::vmm_destroy_user_pml4;
+using mm::vmm_switch_pml4;
+using mm::vmm_get_current_pml4;
+using mm::vmm_map_user_page;

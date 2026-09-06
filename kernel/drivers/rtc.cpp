@@ -164,4 +164,4 @@ void rtc_init() {
     drivers::serial_puts("[RTC] CMOS Real-Time Clock initialized\r\n");
 }
 
-} // namespace drivers
+}

@@ -1,17 +1,10 @@
-/* ==============================================================================
- * ZweiOS - Native Linux ABI Subsystem Demonstration Application
- * Target: x86_64-unknown-linux-gnu (Standard ELF64 Executable)
- * 
- * This program compiles into an authentic Linux ELF64 binary with NO C runtime.
- * It accesses the System V AMD64 stack prepared by ZweiOS, performs math,
- * and communicates with the ZweiOS kernel via hardware 'syscall' instructions.
- * ============================================================================== */
+
 
 typedef unsigned long  size_t;
 typedef long           int64_t;
 typedef unsigned long  uint64_t;
 
-/* Standard Linux x86_64 System Calls */
+
 static inline int64_t sys_write(int fd, const void* buf, size_t count) {
     int64_t ret;
     __asm__ volatile (
@@ -62,7 +55,7 @@ int app_main(const uint64_t* sp) {
     print_num(argc);
     print("\r\n");
 
-    /* User mode Fibonacci calculation */
+
     print("[LINUX ELF64] Calculating Fibonacci sequence in Ring 3: ");
     uint64_t a = 0, b = 1;
     for (int i = 0; i < 10; i++) {

@@ -1,13 +1,4 @@
-/* ==============================================================================
- * ZweiOS Complex Windows Application: win_calc.exe
- * Target: x86_64-w64-mingw32 / Windows x64 PE32+
- * Runs identically on: Native Microsoft Windows & ZweiOS In-Kernel Win32 Subsystem
- * Functionality:
- *   - Prime Factorization of large numbers
- *   - Collatz Conjecture (3n+1) trajectory & peak analysis
- *   - Dynamic Heap allocation (HeapAlloc/HeapFree)
- *   - High-precision execution timing (GetTickCount64)
- * ============================================================================== */
+
 
 #define STD_OUTPUT_HANDLE ((unsigned long)-11)
 #define HEAP_ZERO_MEMORY  0x00000008
@@ -43,7 +34,7 @@ static void print_u64(void* hOut, unsigned long long val) {
     print_str(hOut, &buf[idx + 1]);
 }
 
-// Factorize number n and print factors
+
 static void factorize(void* hOut, unsigned long long n) {
     print_str(hOut, "    Factors of ");
     print_u64(hOut, n);
@@ -52,7 +43,7 @@ static void factorize(void* hOut, unsigned long long n) {
     unsigned long long temp = n;
     int first = 1;
 
-    // Check factor 2
+
     while ((temp % 2) == 0) {
         if (!first) print_str(hOut, " * ");
         print_u64(hOut, 2);
@@ -60,7 +51,7 @@ static void factorize(void* hOut, unsigned long long n) {
         temp /= 2;
     }
 
-    // Check odd factors
+
     for (unsigned long long d = 3; d * d <= temp; d += 2) {
         while ((temp % d) == 0) {
             if (!first) print_str(hOut, " * ");
@@ -77,7 +68,7 @@ static void factorize(void* hOut, unsigned long long n) {
     print_str(hOut, "\r\n");
 }
 
-// Collatz trajectory analysis
+
 static void collatz_analysis(void* hOut, unsigned long long start_val) {
     print_str(hOut, "    Collatz Sequence for n = ");
     print_u64(hOut, start_val);
@@ -117,24 +108,24 @@ void mainCRTStartup(void) {
     print_str(hOut, "  [WIN32 CALC] High-Performance Number Theory & Math Engine     \r\n");
     print_str(hOut, "================================================================\r\n");
 
-    // 1. Prime Factorization Demonstrations
+
     print_str(hOut, "[1] Prime Factorization Engine:\r\n");
     factorize(hOut, 1024);
     factorize(hOut, 65535);
-    factorize(hOut, 104729);   // Prime number 10,000
+    factorize(hOut, 104729);
     factorize(hOut, 1234567890ULL);
 
-    // 2. Collatz Conjecture (3n+1) Engine
+
     print_str(hOut, "\r\n[2] Collatz 3n+1 Trajectory Analysis:\r\n");
     collatz_analysis(hOut, 27);
     collatz_analysis(hOut, 97);
     collatz_analysis(hOut, 871);
 
-    // 3. Dynamic Heap Buffer Matrix Calculation
+
     print_str(hOut, "\r\n[3] Dynamic Heap Allocation via HeapAlloc (512 QWORDs):\r\n");
     unsigned long long* buffer = (unsigned long long*)HeapAlloc(hHeap, HEAP_ZERO_MEMORY, 512 * sizeof(unsigned long long));
     if (buffer) {
-        // Compute Fibonacci numbers directly into heap buffer
+
         buffer[0] = 0;
         buffer[1] = 1;
         for (int i = 2; i < 50; ++i) {

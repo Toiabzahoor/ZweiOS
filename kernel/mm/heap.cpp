@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Kernel Heap Allocator (Boundary-Tag Free-List) Implementation
- * ============================================================================== */
+
 
 #include "mm/heap.hpp"
 #include "lib/string.hpp"
@@ -28,12 +25,12 @@ struct [[gnu::packed]] heap_footer_t {
 
 alignas(16) static uint8_t heap_storage[HEAP_INIT_SIZE];
 static size_t heap_capacity_bytes = HEAP_INIT_SIZE;
-static size_t allocated_bytes_count = 342 * 1024; // Base kernel heap structures: 342 KB
+static size_t allocated_bytes_count = 342 * 1024;
 static size_t allocated_blocks_count = 85;
 static size_t free_bytes_count = (HEAP_INIT_SIZE - 342 * 1024);
 static size_t free_blocks_count = 3;
 
-static size_t dynamic_offset = 512 * 1024; // Dynamic allocation offset above base structures
+static size_t dynamic_offset = 512 * 1024;
 
 void heap_init() {
     drivers::serial_puts("[HEAP] Kernel boundary-tag heap initialized (Capacity: 4096 KB)\r\n");
@@ -41,13 +38,13 @@ void heap_init() {
 
 void* kmalloc(size_t size) {
     if (size == 0) size = 16;
-    size = (size + 15) & ~15; // 16-byte alignment
+    size = (size + 15) & ~15;
 
     size_t total_size = sizeof(heap_header_t) + size + sizeof(heap_footer_t);
     total_size = (total_size + 15) & ~15;
 
     if (dynamic_offset + total_size >= HEAP_INIT_SIZE) {
-        return nullptr; // Out of heap memory
+        return nullptr;
     }
 
     uint8_t* block_addr = heap_storage + dynamic_offset;
@@ -79,7 +76,7 @@ void kfree(void* ptr) {
 
     heap_header_t* hdr = reinterpret_cast<heap_header_t*>(static_cast<uint8_t*>(ptr) - sizeof(heap_header_t));
     if (hdr->magic != HEAP_HEADER_MAGIC) {
-        return; // Invalid or corrupted block header
+        return;
     }
 
     if (hdr->is_allocated) {
@@ -124,9 +121,9 @@ void heap_get_stats(size_t* total_bytes, size_t* used_bytes, size_t* free_bytes,
     if (free_blocks)  *free_blocks  = free_blocks_count;
 }
 
-} // namespace mm
+}
 
-// Global C++ Operator Overloads
+
 void* operator new(size_t size) {
     return mm::kmalloc(size);
 }

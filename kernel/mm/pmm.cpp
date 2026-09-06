@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Physical Memory Manager (PMM Bitmap Allocator) Implementation
- * ============================================================================== */
+
 
 #include "mm/pmm.hpp"
 #include "drivers/serial.hpp"
@@ -12,17 +9,17 @@ static uint64_t frame_bitmap[BITMAP_WORDS];
 static size_t used_frames_count = 0;
 static size_t total_frames_count = TOTAL_FRAMES;
 
-void pmm_init(void* /*boot_info*/) {
-    // 1. Mark all frames as allocated by default
+void pmm_init(void* ) {
+
     for (size_t i = 0; i < BITMAP_WORDS; ++i) {
         frame_bitmap[i] = 0xFFFFFFFFFFFFFFFFULL;
     }
     used_frames_count = total_frames_count;
 
-    // 2. Free usable physical RAM above 14MB up to 128MB
-    // Low 14MB (0x00000000 .. 0x00DFFFFF, 3584 frames) reserved for BIOS, ISA, Kernel & Tables
-    size_t start_free_frame = 3584; // 14 MB
-    size_t end_free_frame   = total_frames_count; // 32768 (128 MB)
+
+
+    size_t start_free_frame = 3584;
+    size_t end_free_frame   = total_frames_count;
 
     for (size_t f = start_free_frame; f < end_free_frame; ++f) {
         frame_bitmap[f / 64] &= ~(1ULL << (f % 64));
@@ -43,7 +40,7 @@ uint64_t pmm_alloc_frame() {
             return static_cast<uint64_t>(frame_idx * PAGE_SIZE);
         }
     }
-    return 0; // Out of memory
+    return 0;
 }
 
 uint64_t pmm_alloc_contiguous_frames(size_t count) {
@@ -59,7 +56,7 @@ uint64_t pmm_alloc_contiguous_frames(size_t count) {
             if (consecutive == 0) start_frame = f;
             consecutive++;
             if (consecutive == count) {
-                // Mark all as allocated
+
                 for (size_t k = start_frame; k < start_frame + count; ++k) {
                     frame_bitmap[k / 64] |= (1ULL << (k % 64));
                     used_frames_count++;
@@ -94,4 +91,4 @@ void pmm_get_stats(size_t* total_frames, size_t* used_frames, size_t* free_frame
     if (free_frames)  *free_frames  = (total_frames_count >= used_frames_count) ? (total_frames_count - used_frames_count) : 0;
 }
 
-} // namespace mm
+}

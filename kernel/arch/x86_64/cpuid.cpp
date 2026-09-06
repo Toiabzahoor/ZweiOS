@@ -1,8 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Architecture: x86_64 Long Mode
- * Component: CPUID Instruction Interface & Feature Decoder Implementation
- * ============================================================================== */
+
 
 #include "arch/x86_64/cpuid.hpp"
 #include "drivers/serial.hpp"
@@ -22,17 +18,17 @@ void cpuid_detect(cpu_info_t* info) {
 
     uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
 
-    // 1. Leaf 0: Vendor String & Maximum Standard Leaf
+
     cpuid(0, 0, &eax, &ebx, &ecx, &edx);
     info->max_leaf = eax;
 
-    // EBX, EDX, ECX contain 12-byte vendor string
+
     *reinterpret_cast<uint32_t*>(&info->vendor[0]) = ebx;
     *reinterpret_cast<uint32_t*>(&info->vendor[4]) = edx;
     *reinterpret_cast<uint32_t*>(&info->vendor[8]) = ecx;
     info->vendor[12] = '\0';
 
-    // 2. Leaf 1: Family, Model, Stepping & Features
+
     if (info->max_leaf >= 1) {
         cpuid(1, 0, &eax, &ebx, &ecx, &edx);
         info->stepping = eax & 0x0F;
@@ -48,13 +44,13 @@ void cpuid_detect(cpu_info_t* info) {
         info->features_ecx1 = ecx;
     }
 
-    // 3. Leaf 7: Extended Feature Flags
+
     if (info->max_leaf >= 7) {
         cpuid(7, 0, &eax, &ebx, &ecx, &edx);
         info->features_ebx7 = ebx;
     }
 
-    // 4. Extended Leaves: Brand String (0x80000000..0x80000004)
+
     cpuid(0x80000000, 0, &eax, &ebx, &ecx, &edx);
     info->max_ext_leaf = eax;
 
@@ -101,7 +97,7 @@ void cpuid_print_report() {
 
     lib::kprint_str("  Features      : ");
 
-    // Standard EDX features (Leaf 1)
+
     if (cached_cpu_info.features_edx1 & (1 << 0))  lib::kprint_str("FPU ");
     if (cached_cpu_info.features_edx1 & (1 << 4))  lib::kprint_str("TSC ");
     if (cached_cpu_info.features_edx1 & (1 << 5))  lib::kprint_str("MSR ");
@@ -114,7 +110,7 @@ void cpuid_print_report() {
     if (cached_cpu_info.features_edx1 & (1 << 25)) lib::kprint_str("SSE ");
     if (cached_cpu_info.features_edx1 & (1 << 26)) lib::kprint_str("SSE2 ");
 
-    // Standard ECX features (Leaf 1)
+
     if (cached_cpu_info.features_ecx1 & (1 << 0))  lib::kprint_str("SSE3 ");
     if (cached_cpu_info.features_ecx1 & (1 << 9))  lib::kprint_str("SSSE3 ");
     if (cached_cpu_info.features_ecx1 & (1 << 19)) lib::kprint_str("SSE4.1 ");
@@ -122,10 +118,10 @@ void cpuid_print_report() {
     if (cached_cpu_info.features_ecx1 & (1 << 28)) lib::kprint_str("AVX ");
     if (cached_cpu_info.features_ecx1 & (1 << 30)) lib::kprint_str("RDRAND ");
 
-    // Extended EBX features (Leaf 7)
+
     if (cached_cpu_info.features_ebx7 & (1 << 5))  lib::kprint_str("AVX2 ");
 
     lib::kprint_str("\r\n");
 }
 
-} // namespace arch
+}

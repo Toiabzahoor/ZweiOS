@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Formatted Kernel Printf & Dual-Stream Output Mirroring
- * ============================================================================== */
+
 
 #pragma once
 
@@ -20,8 +17,9 @@ void kprint_ptr(const void* ptr);
 
 void kvprintf(const char* fmt, va_list args);
 void kprintf(const char* fmt, ...);
+void kprint_set_hook(void (*hook)(char c));
 
-} // namespace lib
+}
 
 using lib::kprint_char;
 using lib::kprint_str;

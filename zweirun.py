@@ -20,6 +20,7 @@ KERNEL32_ELF = BUILD_DIR / "kernel32.elf"
 ISO_IMAGE = BUILD_DIR / "zweios.iso"
 SERIAL_LOG = BUILD_DIR / "serial.log"
 TEST_RESULTS_JSON = BUILD_DIR / "test_results.json"
+DISK_IMAGE = BUILD_DIR / "disk0.img"
 
 EXTRA_PATHS = [
     Path(r"C:\msys64\ucrt64\bin"),
@@ -88,7 +89,7 @@ def build_iso() -> bool:
     print(f"[ZweiOS Runner] ISO build complete: {ISO_IMAGE} ({ISO_IMAGE.stat().st_size} bytes)")
     return True
 
-def run_gui(use_iso: bool = False, memory: str = "256M", smp: int = 1, verbose: bool = False):
+def run_gui(use_iso: bool = False, memory: str = "256M", smp: int = 1, verbose: bool = False, use_sdl: bool = False):
     """Launches ZweiOS in QEMU GUI mode with serial mirrored to stdio."""
     if use_iso:
         build_iso()
@@ -96,20 +97,26 @@ def run_gui(use_iso: bool = False, memory: str = "256M", smp: int = 1, verbose: 
         run_build(verbose=verbose)
 
     target_image = ISO_IMAGE if use_iso else KERNEL32_ELF
+    disp = "sdl,show-cursor=off" if use_sdl else "gtk,show-cursor=off,show-menubar=off,zoom-to-fit=off"
     cmd = [
         QEMU,
+        "-machine", "pc,vmport=on",
         "-m", memory,
         "-smp", str(smp),
-        "-usb",
-        "-device", "usb-tablet",
-        "-display", "gtk,show-cursor=on",
+        "-vga", "std",
+        "-display", disp,
         "-serial", "stdio",
+        "-device", "e1000,netdev=u1",
+        "-netdev", "user,id=u1",
         "-no-reboot",
     ]
     if use_iso:
         cmd += ["-cdrom", str(target_image)]
     else:
         cmd += ["-kernel", str(target_image)]
+
+    if DISK_IMAGE.exists():
+        cmd += ["-drive", f"file={DISK_IMAGE},format=raw,if=ide"]
 
     print(f"[ZweiOS Runner] Launching GUI QEMU: {' '.join(cmd)}")
     try:
@@ -139,12 +146,17 @@ def run_headless_test(timeout_sec: float = 5.0, use_iso: bool = False, memory: s
         "-display", "none",
         "-serial", f"file:{SERIAL_LOG}",
         "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
+        "-device", "e1000,netdev=u1",
+        "-netdev", "user,id=u1",
         "-no-reboot",
     ]
     if use_iso:
         cmd += ["-cdrom", str(target_image)]
     else:
         cmd += ["-kernel", str(target_image)]
+
+    if DISK_IMAGE.exists():
+        cmd += ["-drive", f"file={DISK_IMAGE},format=raw,if=ide"]
 
     print(f"[ZweiOS Runner] Executing Headless QEMU Test (timeout: {timeout_sec}s)...")
     start_time = time.time()
@@ -251,6 +263,7 @@ def main():
     parser.add_argument("--gui", action="store_true", help="Launch interactive QEMU GUI window")
     parser.add_argument("--test", action="store_true", help="Run automated headless test verification")
     parser.add_argument("--debug", action="store_true", help="Launch QEMU with GDB stub waiting on port 1234")
+    parser.add_argument("--sdl", action="store_true", help="Use SDL display backend instead of GTK")
     parser.add_argument("-m", "--memory", default="256M", help="RAM allocated to QEMU VM (default: 256M)")
     parser.add_argument("-s", "--smp", type=int, default=1, help="CPU core count (default: 1)")
     parser.add_argument("-t", "--timeout", type=float, default=5.0, help="Timeout in seconds for headless test (default: 5.0)")
@@ -276,7 +289,7 @@ def main():
     elif args.action == "iso":
         build_iso()
     elif args.action == "run" or args.gui or args.action is None:
-        run_gui(use_iso=args.iso, memory=args.memory, smp=args.smp, verbose=args.verbose)
+        run_gui(use_iso=args.iso, memory=args.memory, smp=args.smp, verbose=args.verbose, use_sdl=args.sdl)
 
 if __name__ == "__main__":
     main()

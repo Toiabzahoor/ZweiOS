@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: 64-bit ELF (Executable and Linkable Format) Implementation
- * ============================================================================== */
+
 
 #include "loader/elf.hpp"
 #include "lib/string.hpp"
@@ -48,7 +45,7 @@ bool elf_parse(const uint8_t* data, size_t size, BinaryInfo* out_info) {
 
     const auto* ehdr = reinterpret_cast<const Elf64_Ehdr*>(data);
 
-    // Verify program header table falls within file boundaries
+
     uint64_t ph_end = ehdr->e_phoff + (static_cast<uint64_t>(ehdr->e_phnum) * sizeof(Elf64_Phdr));
     if (ph_end > size || ehdr->e_phentsize < sizeof(Elf64_Phdr)) {
         return false;
@@ -85,14 +82,14 @@ bool elf_parse(const uint8_t* data, size_t size, BinaryInfo* out_info) {
             break;
         }
 
-        // Validate segment offset and size inside file
+
         if (phdr->p_offset + phdr->p_filesz > size) {
             return false;
         }
 
         BinarySegment* seg = &out_info->segments[seg_idx];
-        
-        // Construct segment name: "LOAD0", "LOAD1", etc.
+
+
         seg->name[0] = 'L'; seg->name[1] = 'O'; seg->name[2] = 'A'; seg->name[3] = 'D';
         seg->name[4] = static_cast<char>('0' + (seg_idx % 10));
         seg->name[5] = '\0';
@@ -136,4 +133,4 @@ bool elf_parse(const uint8_t* data, size_t size, BinaryInfo* out_info) {
     return true;
 }
 
-} // namespace loader
+}

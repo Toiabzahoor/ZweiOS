@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: ATA / IDE Hard Disk PIO Mode Driver Implementation
- * ============================================================================== */
+
 
 #include "drivers/ata.hpp"
 #include "arch/x86_64/io.hpp"
@@ -28,7 +25,7 @@ const char* ata_get_model(void) {
 }
 
 static void ata_delay_400ns(void) {
-    // Reading Alternate Status 4 times provides ~400ns bus delay
+
     inb(ATA_PRIMARY_CONTROL);
     inb(ATA_PRIMARY_CONTROL);
     inb(ATA_PRIMARY_CONTROL);
@@ -68,28 +65,28 @@ void ata_init(void) {
     g_ata_sectors = 0;
     lib::memset(g_ata_model, 0, sizeof(g_ata_model));
 
-    // 1. Select master drive on primary bus
+
     outb(ATA_PRIMARY_DRIVE_HEAD, 0xA0);
     ata_delay_400ns();
 
-    // 2. Clear sector count & LBA registers
+
     outb(ATA_PRIMARY_SECCOUNT, 0);
     outb(ATA_PRIMARY_LBA_LO, 0);
     outb(ATA_PRIMARY_LBA_MID, 0);
     outb(ATA_PRIMARY_LBA_HI, 0);
 
-    // 3. Send IDENTIFY command
+
     outb(ATA_PRIMARY_COMMAND, ATA_CMD_IDENTIFY);
     ata_delay_400ns();
 
     uint8_t status = inb(ATA_PRIMARY_STATUS);
     if (status == 0) {
-        // No drive present on primary master
+
         drivers::serial_puts("[ATA] Primary Master: No drive detected.\r\n");
         return;
     }
 
-    // Check for non-standard ATA devices (e.g. ATAPI)
+
     uint8_t lba_mid = inb(ATA_PRIMARY_LBA_MID);
     uint8_t lba_hi  = inb(ATA_PRIMARY_LBA_HI);
     if (lba_mid != 0 || lba_hi != 0) {
@@ -102,13 +99,13 @@ void ata_init(void) {
         return;
     }
 
-    // 4. Read 256 16-bit words (512 bytes) of identity data
+
     uint16_t id_buf[256];
     for (int i = 0; i < 256; ++i) {
         id_buf[i] = inw(ATA_PRIMARY_DATA);
     }
 
-    // 5. Extract Model string (words 27-46, 40 ASCII chars, byte-swapped)
+
     size_t char_idx = 0;
     for (int i = 27; i <= 46; ++i) {
         g_ata_model[char_idx++] = static_cast<char>((id_buf[i] >> 8) & 0xFF);
@@ -116,7 +113,7 @@ void ata_init(void) {
     }
     g_ata_model[char_idx] = '\0';
 
-    // Trim trailing spaces
+
     for (int i = static_cast<int>(char_idx) - 1; i >= 0; --i) {
         if (g_ata_model[i] == ' ') {
             g_ata_model[i] = '\0';
@@ -125,7 +122,7 @@ void ata_init(void) {
         }
     }
 
-    // 6. Extract Total Sectors (LBA28 in words 60-61)
+
     g_ata_sectors = (static_cast<uint32_t>(id_buf[61]) << 16) | id_buf[60];
     g_ata_present = true;
 
@@ -148,7 +145,7 @@ bool ata_read_sectors(uint32_t lba, uint8_t count, uint8_t* buffer) {
 
         if (!ata_wait_ready()) return false;
 
-        // Select drive and LBA bits 24-27
+
         outb(ATA_PRIMARY_DRIVE_HEAD, 0xE0 | ((curr_lba >> 24) & 0x0F));
         ata_delay_400ns();
 
@@ -196,10 +193,10 @@ bool ata_write_sectors(uint32_t lba, uint8_t count, const uint8_t* buffer) {
         }
     }
 
-    // Flush cache after write
+
     outb(ATA_PRIMARY_COMMAND, 0xE7);
     ata_wait_ready();
     return true;
 }
 
-} // namespace drivers
+}

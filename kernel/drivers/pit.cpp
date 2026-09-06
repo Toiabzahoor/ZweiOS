@@ -3,6 +3,7 @@
 #include "arch/x86_64/pic.hpp"
 #include "arch/x86_64/isr.hpp"
 #include "drivers/serial.hpp"
+#include "proc/sched.hpp"
 
 namespace drivers {
 
@@ -18,9 +19,10 @@ static inline bool interrupts_enabled() {
     return (rflags & (1 << 9)) != 0;
 }
 
-void pit_irq_handler(arch::cpu_registers_t* /*regs*/) {
+void pit_irq_handler(arch::cpu_registers_t* regs) {
     g_pit_ticks++;
     arch::pic_send_eoi(0);
+    proc::sched_tick(regs);
 }
 
 void pit_init(uint32_t frequency) {
@@ -78,4 +80,4 @@ void timer_sleep_seconds(uint32_t seconds) {
     timer_sleep_ticks(static_cast<uint64_t>(seconds) * g_pit_frequency);
 }
 
-} // namespace drivers
+}

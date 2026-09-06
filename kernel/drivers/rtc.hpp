@@ -19,7 +19,7 @@ rtc_time_t rtc_get_time();
 void rtc_format_date(const rtc_time_t* t, char* buf, size_t buf_size);
 void rtc_format_time(const rtc_time_t* t, char* buf, size_t buf_size);
 
-} // namespace drivers
+}
 
 using drivers::rtc_time_t;
 using drivers::rtc_init;

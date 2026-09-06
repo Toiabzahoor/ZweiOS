@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Freestanding String and Memory Manipulation Primitives
- * ============================================================================== */
+
 
 #pragma once
 
@@ -24,12 +21,12 @@ extern "C" {
     char* strcat(char* dest, const char* src);
 }
 
-// Additional kernel string helpers
+
 bool is_digit(char c);
 bool is_space(char c);
 int string_to_int(const char* str);
 
-} // namespace lib
+}
 
 using lib::memset;
 using lib::memcpy;

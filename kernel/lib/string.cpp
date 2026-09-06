@@ -1,7 +1,4 @@
-/* ==============================================================================
- * ZweiOS - Bare-Metal x86_64 Operating System
- * Component: Freestanding String and Memory Manipulation Implementation
- * ============================================================================== */
+
 
 #include "lib/string.hpp"
 
@@ -12,7 +9,17 @@ extern "C" {
 void* memset(void* dest, int val, size_t count) {
     uint8_t* ptr = static_cast<uint8_t*>(dest);
     uint8_t byte = static_cast<uint8_t>(val);
-    for (size_t i = 0; i < count; ++i) {
+    uint64_t val64 = byte;
+    val64 |= (val64 << 8);
+    val64 |= (val64 << 16);
+    val64 |= (val64 << 32);
+
+    size_t qwords = count / 8;
+    uint64_t* ptr64 = reinterpret_cast<uint64_t*>(ptr);
+    for (size_t i = 0; i < qwords; ++i) {
+        ptr64[i] = val64;
+    }
+    for (size_t i = qwords * 8; i < count; ++i) {
         ptr[i] = byte;
     }
     return dest;
@@ -21,7 +28,15 @@ void* memset(void* dest, int val, size_t count) {
 void* memcpy(void* dest, const void* src, size_t count) {
     uint8_t* d = static_cast<uint8_t*>(dest);
     const uint8_t* s = static_cast<const uint8_t*>(src);
-    for (size_t i = 0; i < count; ++i) {
+
+    size_t qwords = count / 8;
+    uint64_t* d64 = reinterpret_cast<uint64_t*>(d);
+    const uint64_t* s64 = reinterpret_cast<const uint64_t*>(s);
+
+    for (size_t i = 0; i < qwords; ++i) {
+        d64[i] = s64[i];
+    }
+    for (size_t i = qwords * 8; i < count; ++i) {
         d[i] = s[i];
     }
     return dest;
@@ -31,7 +46,13 @@ void* memmove(void* dest, const void* src, size_t count) {
     uint8_t* d = static_cast<uint8_t*>(dest);
     const uint8_t* s = static_cast<const uint8_t*>(src);
     if (d < s) {
-        for (size_t i = 0; i < count; ++i) {
+        size_t qwords = count / 8;
+        uint64_t* d64 = reinterpret_cast<uint64_t*>(d);
+        const uint64_t* s64 = reinterpret_cast<const uint64_t*>(s);
+        for (size_t i = 0; i < qwords; ++i) {
+            d64[i] = s64[i];
+        }
+        for (size_t i = qwords * 8; i < count; ++i) {
             d[i] = s[i];
         }
     } else if (d > s) {
@@ -116,7 +137,7 @@ char* strcat(char* dest, const char* src) {
     return ret;
 }
 
-} // extern "C"
+}
 
 bool is_digit(char c) {
     return c >= '0' && c <= '9';
@@ -144,4 +165,4 @@ int string_to_int(const char* str) {
     return sign * result;
 }
 
-} // namespace lib
+}
